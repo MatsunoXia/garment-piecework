@@ -1,0 +1,27 @@
+{
+  "name": "计件工资",
+  "appid": "",
+  "description": "服装厂计件工资管理系统 · 员工与管理员共用小程序",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "mp-weixin": {
+    "appid": "touristappid",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "minified": true,
+      "postcss": true
+    },
+    "usingComponents": true
+  },
+  "h5": {
+    "router": {
+      "base": "./"
+    },
+    "devServer": {
+      "port": 5174
+    }
+  },
+  "vueVersion": "3"
+}

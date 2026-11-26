@@ -1,0 +1,25 @@
+# 依赖与构建产物
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+*.tsbuildinfo
+
+# 环境变量（只提交 .env.example）
+.env
+.env.local
+.env.*.local
+
+# Prisma 生成客户端（执行 prisma generate 重新生成）
+apps/api/src/generated/
+
+# 日志与临时文件
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.vscode/
+.idea/

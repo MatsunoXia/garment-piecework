@@ -1,0 +1,69 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/index",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/join/index",
+      "style": { "navigationBarTitleText": "加入公司" }
+    },
+    {
+      "path": "pages/employee/home",
+      "style": { "navigationBarTitleText": "计件工资" }
+    },
+    {
+      "path": "pages/employee/report",
+      "style": { "navigationBarTitleText": "报工" }
+    },
+    {
+      "path": "pages/employee/reports",
+      "style": { "navigationBarTitleText": "我的报工" }
+    },
+    {
+      "path": "pages/employee/disputes",
+      "style": { "navigationBarTitleText": "我的争议" }
+    },
+    {
+      "path": "pages/employee/wages",
+      "style": { "navigationBarTitleText": "我的工资" }
+    },
+    {
+      "path": "pages/employee/profile",
+      "style": { "navigationBarTitleText": "我的" }
+    },
+    {
+      "path": "pages/admin/home",
+      "style": { "navigationBarTitleText": "管理工作台" }
+    },
+    {
+      "path": "pages/admin/review",
+      "style": { "navigationBarTitleText": "报工审核" }
+    },
+    {
+      "path": "pages/admin/disputes",
+      "style": { "navigationBarTitleText": "争议处理" }
+    },
+    {
+      "path": "pages/admin/proxy",
+      "style": { "navigationBarTitleText": "管理员代报" }
+    },
+    {
+      "path": "pages/admin/payroll",
+      "style": { "navigationBarTitleText": "工资统计" }
+    },
+    {
+      "path": "pages/admin/settlement",
+      "style": { "navigationBarTitleText": "工资结算" }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "计件工资",
+    "navigationBarBackgroundColor": "#3556d6",
+    "backgroundColor": "#f5f6fa"
+  }
+}

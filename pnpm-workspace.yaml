@@ -1,0 +1,11 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+allowBuilds:
+  '@prisma/engines': true
+  prisma: true
+  '@scarf/scarf': false
+  esbuild: true
+  '@parcel/watcher': true
+  core-js: false
+  core-js-pure: false

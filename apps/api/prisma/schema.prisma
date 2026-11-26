@@ -1,0 +1,469 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model admin_invitation_uses {
+  id                String            @id @db.Uuid
+  company_id        String            @db.Uuid
+  invitation_id     String            @db.Uuid
+  admin_id          String            @db.Uuid
+  used_at           DateTime          @default(now()) @db.Timestamptz(6)
+  admins            admins            @relation(fields: [company_id, admin_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  admin_invitations admin_invitations @relation(fields: [company_id, invitation_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([invitation_id, admin_id])
+  @@index([company_id, admin_id], map: "idx_admin_invitation_uses_admin")
+  @@index([company_id, invitation_id], map: "idx_admin_invitation_uses_invitation")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model admin_invitations {
+  id                    String                  @id @db.Uuid
+  company_id            String                  @db.Uuid
+  token_hash            String                  @unique @db.VarChar(128)
+  status                String                  @default("active") @db.VarChar(20)
+  expires_at            DateTime?               @db.Timestamptz(6)
+  created_by_admin_id   String                  @db.Uuid
+  created_at            DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                @default(now()) @db.Timestamptz(6)
+  admin_invitation_uses admin_invitation_uses[]
+  admins                admins                  @relation(fields: [company_id, created_by_admin_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  companies             companies               @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([company_id, id])
+  @@index([company_id, created_by_admin_id], map: "idx_admin_invites_creator")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model admins {
+  id                                                      String                    @id @db.Uuid
+  company_id                                              String                    @unique(map: "uq_admins_one_founder_per_company", where: raw("(is_founder = true)")) @db.Uuid
+  openid                                                  String                    @unique(map: "uq_admins_one_active_admin_per_openid", where: raw("((status)::text = 'active'::text)")) @db.VarChar(128)
+  unionid                                                 String?                   @db.VarChar(128)
+  name                                                    String                    @db.VarChar(50)
+  status                                                  String                    @default("active") @db.VarChar(20)
+  joined_at                                               DateTime                  @default(now()) @db.Timestamptz(6)
+  created_at                                              DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at                                              DateTime                  @default(now()) @db.Timestamptz(6)
+  is_founder                                              Boolean                   @default(false)
+  admin_invitation_uses                                   admin_invitation_uses[]
+  admin_invitations                                       admin_invitations[]
+  companies                                               companies                 @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  company_invitation_codes                                company_invitation_codes[]
+  employee_rebind_tokens                                  employee_rebind_tokens[]
+  report_disputes                                         report_disputes[]
+  reports_reports_company_id_operator_admin_idToadmins    reports[]                 @relation("reports_company_id_operator_admin_idToadmins")
+  reports_reports_company_id_reviewed_by_admin_idToadmins reports[]                 @relation("reports_company_id_reviewed_by_admin_idToadmins")
+  settlements                                             settlements[]
+  styles                                                  styles[]
+
+  @@unique([company_id, id])
+  @@unique([company_id, openid])
+  @@index([company_id, status], map: "idx_admins_company_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model bundles {
+  id           String    @id @db.Uuid
+  company_id   String    @db.Uuid
+  style_id     String    @db.Uuid
+  bundle_no    Int
+  size         String?   @db.VarChar(30)
+  quantity     Int
+  remark       String?   @db.VarChar(200)
+  has_reported Boolean   @default(false)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime  @default(now()) @db.Timestamptz(6)
+  styles       styles    @relation(fields: [company_id, style_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  reports      reports[]
+
+  @@unique([company_id, id])
+  @@unique([company_id, style_id, id])
+  @@unique([style_id, bundle_no])
+  @@index([company_id, style_id], map: "idx_bundles_style")
+  @@index([style_id, bundle_no], map: "idx_bundles_style_no")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model companies {
+  id                       String                    @id @db.Uuid
+  company_no               String                    @unique @db.VarChar(20)
+  name                     String                    @db.VarChar(100)
+  status                   String                    @default("active") @db.VarChar(20)
+  created_at               DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime                  @default(now()) @db.Timestamptz(6)
+  admin_password_hash      String?                   @db.VarChar(255)
+  admin_invitations        admin_invitations[]
+  admins                   admins?
+  company_invitation_codes company_invitation_codes[]
+  employee_number_counters employee_number_counters?
+  employees                employees[]
+  operation_logs           operation_logs[]
+  process_templates        process_templates[]
+  report_disputes          report_disputes[]
+  style_number_counters    style_number_counters[]
+  styles                   styles[]
+  workshops                workshops[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model company_invitation_codes {
+  id                  String    @id @db.Uuid
+  company_id          String    @unique(map: "uq_company_one_active_employee_invite", where: raw("((status)::text = 'active'::text)")) @db.Uuid
+  code                String    @unique @db.VarChar(32)
+  status              String    @default("active") @db.VarChar(20)
+  expires_at          DateTime? @db.Timestamptz(6)
+  created_by_admin_id String    @db.Uuid
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime  @default(now()) @db.Timestamptz(6)
+  admins              admins    @relation(fields: [company_id, created_by_admin_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  companies           companies @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([company_id, id])
+  @@index([company_id, created_by_admin_id], map: "idx_company_invites_creator")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model employee_number_counters {
+  id          String    @id @db.Uuid
+  company_id  String    @unique @db.Uuid
+  last_number Int       @default(0)
+  companies   companies @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model employee_rebind_tokens {
+  id                  String    @id @db.Uuid
+  company_id          String    @db.Uuid
+  employee_id         String    @unique(map: "uq_employee_one_active_rebind_token", where: raw("((status)::text = 'active'::text)")) @db.Uuid
+  token_hash          String    @unique @db.VarChar(128)
+  status              String    @default("active") @db.VarChar(20)
+  expires_at          DateTime  @db.Timestamptz(6)
+  used_at             DateTime? @db.Timestamptz(6)
+  created_by_admin_id String    @db.Uuid
+  created_at          DateTime  @default(now()) @db.Timestamptz(6)
+  admins              admins    @relation(fields: [company_id, created_by_admin_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  employees           employees @relation(fields: [company_id, employee_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([company_id, created_by_admin_id], map: "idx_rebind_tokens_creator")
+  @@index([company_id, employee_id], map: "idx_rebind_tokens_employee")
+}
+
+model employee_wechat_bindings {
+  id          String    @id @db.Uuid
+  company_id  String    @db.Uuid
+  employee_id String    @unique @db.Uuid
+  openid      String    @unique @db.VarChar(128)
+  unionid     String?   @db.VarChar(128)
+  bound_at    DateTime  @default(now()) @db.Timestamptz(6)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime  @default(now()) @db.Timestamptz(6)
+  employees   employees @relation(fields: [company_id, employee_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([company_id, employee_id], map: "idx_employee_bindings_company_employee")
+}
+
+model employee_workshops {
+  id          String    @id @db.Uuid
+  company_id  String    @db.Uuid
+  employee_id String    @db.Uuid
+  workshop_id String    @db.Uuid
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  employees   employees @relation(fields: [company_id, employee_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  workshops   workshops @relation(fields: [company_id, workshop_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([employee_id, workshop_id])
+  @@index([company_id, employee_id], map: "idx_employee_workshops_employee")
+  @@index([company_id, workshop_id], map: "idx_employee_workshops_workshop")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model employees {
+  id                                                                           String                    @id @db.Uuid
+  company_id                                                                   String                    @db.Uuid
+  employee_no                                                                  String                    @db.VarChar(20)
+  name                                                                         String                    @db.VarChar(50)
+  remark                                                                       String?                   @db.VarChar(200)
+  status                                                                       String                    @default("active") @db.VarChar(20)
+  created_at                                                                   DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at                                                                   DateTime                  @default(now()) @db.Timestamptz(6)
+  employee_rebind_tokens                                                       employee_rebind_tokens[]
+  employee_wechat_bindings                                                     employee_wechat_bindings[]
+  employee_workshops                                                           employee_workshops[]
+  companies                                                                    companies                 @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  report_disputes_report_disputes_company_id_challenger_employee_idToemployees report_disputes[]         @relation("report_disputes_company_id_challenger_employee_idToemployees")
+  report_disputes_report_disputes_company_id_original_employee_idToemployees   report_disputes[]         @relation("report_disputes_company_id_original_employee_idToemployees")
+  reports                                                                      reports[]
+  settlements                                                                  settlements[]
+
+  @@unique([company_id, employee_no])
+  @@unique([company_id, id])
+  @@index([company_id, status], map: "idx_employees_company_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model operation_logs {
+  id            String    @id @db.Uuid
+  company_id    String    @db.Uuid
+  operator_type String    @db.VarChar(20)
+  operator_id   String?   @db.Uuid
+  action_type   String    @db.VarChar(50)
+  target_type   String    @db.VarChar(50)
+  target_id     String?   @db.Uuid
+  summary       String    @db.VarChar(500)
+  detail        Json?
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  companies     companies @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([company_id, created_at(sort: Desc)], map: "idx_operation_logs_company_time")
+  @@index([company_id, target_type, target_id], map: "idx_operation_logs_target")
+}
+
+model process_template_items {
+  id                String            @id @db.Uuid
+  company_id        String            @db.Uuid
+  template_id       String            @db.Uuid
+  name              String            @db.VarChar(100)
+  group_name        String?           @db.VarChar(100)
+  sort_order        Int               @default(0)
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
+  process_templates process_templates @relation(fields: [company_id, template_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([template_id, name])
+}
+
+model process_templates {
+  id                     String                   @id @db.Uuid
+  company_id             String                   @db.Uuid
+  name                   String                   @db.VarChar(100)
+  remark                 String?                  @db.VarChar(200)
+  created_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  process_template_items process_template_items[]
+  companies              companies                @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([company_id, id])
+  @@unique([company_id, name])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model report_disputes {
+  id                                                                     String    @id @db.Uuid
+  company_id                                                             String    @db.Uuid
+  report_id                                                              String    @db.Uuid
+  original_employee_id                                                   String    @db.Uuid
+  challenger_employee_id                                                 String    @db.Uuid
+  reason                                                                 String?   @db.VarChar(200)
+  status                                                                 String    @default("pending") @db.VarChar(20)
+  result                                                                 String?   @db.VarChar(30)
+  handler_admin_id                                                       String?   @db.Uuid
+  handled_at                                                             DateTime? @db.Timestamptz(6)
+  reject_reason                                                          String?   @db.VarChar(200)
+  terminated_at                                                          DateTime? @db.Timestamptz(6)
+  termination_reason                                                     String?   @db.VarChar(200)
+  created_at                                                             DateTime  @default(now()) @db.Timestamptz(6)
+  employees_report_disputes_company_id_challenger_employee_idToemployees employees @relation("report_disputes_company_id_challenger_employee_idToemployees", fields: [company_id, challenger_employee_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  companies                                                              companies @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  admins                                                                 admins?   @relation(fields: [company_id, handler_admin_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  employees_report_disputes_company_id_original_employee_idToemployees   employees @relation("report_disputes_company_id_original_employee_idToemployees", fields: [company_id, original_employee_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([company_id, id])
+  @@unique([company_id, report_id], map: "uq_report_one_pending_dispute", where: raw("((status)::text = 'pending'::text)"))
+  @@index([company_id, challenger_employee_id], map: "idx_disputes_challenger_employee")
+  @@index([company_id, status, created_at(sort: Desc)], map: "idx_disputes_company_status_time")
+  @@index([company_id, handler_admin_id], map: "idx_disputes_handler_admin")
+  @@index([company_id, original_employee_id], map: "idx_disputes_original_employee")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reports {
+  id                                                     String          @id @db.Uuid
+  company_id                                             String          @db.Uuid
+  style_id                                               String          @db.Uuid
+  style_process_id                                       String          @db.Uuid
+  bundle_id                                              String          @db.Uuid
+  employee_id                                            String          @db.Uuid
+  source                                                 String          @db.VarChar(20)
+  operator_admin_id                                      String?         @db.Uuid
+  operator_remark                                        String?         @db.VarChar(200)
+  reported_at                                            DateTime        @default(now()) @db.Timestamptz(6)
+  status                                                 String          @default("pending") @db.VarChar(20)
+  reviewed_by_admin_id                                   String?         @db.Uuid
+  reviewed_at                                            DateTime?       @db.Timestamptz(6)
+  reject_reason                                          String?         @db.VarChar(200)
+  created_at                                             DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                                             DateTime        @default(now()) @db.Timestamptz(6)
+  employees                                              employees       @relation(fields: [company_id, employee_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  admins_reports_company_id_operator_admin_idToadmins    admins?         @relation("reports_company_id_operator_admin_idToadmins", fields: [company_id, operator_admin_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  admins_reports_company_id_reviewed_by_admin_idToadmins admins?         @relation("reports_company_id_reviewed_by_admin_idToadmins", fields: [company_id, reviewed_by_admin_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  bundles                                                bundles         @relation(fields: [company_id, style_id, bundle_id], references: [company_id, style_id, id], onDelete: NoAction, onUpdate: NoAction)
+  styles                                                 styles          @relation(fields: [company_id, style_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  style_processes                                        style_processes @relation(fields: [company_id, style_id, style_process_id], references: [company_id, style_id, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([company_id, id])
+  @@unique([bundle_id, style_process_id], map: "uq_reports_active_bundle_process", where: raw("((status)::text = ANY ((ARRAY['pending'::character varying, 'approved'::character varying])::text[]))"))
+  @@index([company_id, status, reported_at(sort: Desc)], map: "idx_reports_company_status_time")
+  @@index([company_id, employee_id], map: "idx_reports_employee")
+  @@index([company_id, employee_id, style_id], map: "idx_reports_employee_style")
+  @@index([company_id, operator_admin_id], map: "idx_reports_operator_admin")
+  @@index([company_id, reviewed_by_admin_id], map: "idx_reports_reviewer_admin")
+  @@index([company_id, style_id], map: "idx_reports_style")
+  @@index([style_id, style_process_id, bundle_id], map: "idx_reports_style_process_bundle")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model settlement_process_items {
+  id            String      @id @db.Uuid
+  company_id    String      @db.Uuid
+  settlement_id String      @db.Uuid
+  process_name  String      @db.VarChar(100)
+  group_name    String?     @db.VarChar(100)
+  quantity      Int
+  unit_price    Decimal     @db.Decimal(12, 3)
+  amount        Decimal     @db.Decimal(14, 3)
+  settlements   settlements @relation(fields: [company_id, settlement_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([settlement_id, process_name])
+  @@index([company_id, settlement_id], map: "idx_settlement_process_items_settlement")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model settlement_report_items {
+  id            String      @id @db.Uuid
+  company_id    String      @db.Uuid
+  settlement_id String      @db.Uuid
+  report_id     String      @db.Uuid
+  process_name  String      @db.VarChar(100)
+  bundle_no     Int
+  size          String?     @db.VarChar(30)
+  quantity      Int
+  unit_price    Decimal     @db.Decimal(12, 3)
+  amount        Decimal     @db.Decimal(14, 3)
+  settlements   settlements @relation(fields: [company_id, settlement_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([company_id, report_id])
+  @@index([company_id, settlement_id], map: "idx_settlement_report_items_settlement")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model settlements {
+  id                       String                     @id @db.Uuid
+  company_id               String                     @db.Uuid
+  style_id                 String                     @db.Uuid
+  employee_id              String                     @db.Uuid
+  total_amount             Decimal                    @db.Decimal(14, 2)
+  payment_method           String                     @db.VarChar(20)
+  settled_at               DateTime                   @default(now()) @db.Timestamptz(6)
+  operator_admin_id        String                     @db.Uuid
+  remark                   String?                    @db.VarChar(200)
+  created_at               DateTime                   @default(now()) @db.Timestamptz(6)
+  settlement_process_items settlement_process_items[]
+  settlement_report_items  settlement_report_items[]
+  employees                employees                  @relation(fields: [company_id, employee_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  admins                   admins                     @relation(fields: [company_id, operator_admin_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  styles                   styles                     @relation(fields: [company_id, style_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([company_id, id])
+  @@unique([style_id, employee_id])
+  @@index([company_id, settled_at(sort: Desc)], map: "idx_settlements_company_time")
+  @@index([company_id, employee_id, settled_at(sort: Desc)], map: "idx_settlements_employee_time")
+  @@index([company_id, operator_admin_id], map: "idx_settlements_operator_admin")
+  @@index([company_id, style_id], map: "idx_settlements_style")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model style_number_counters {
+  id          String    @id @db.Uuid
+  company_id  String    @db.Uuid
+  year_month  String    @db.Char(6)
+  last_number Int       @default(0)
+  companies   companies @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([company_id, year_month])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model style_processes {
+  id           String    @id @db.Uuid
+  company_id   String    @db.Uuid
+  style_id     String    @db.Uuid
+  name         String    @db.VarChar(100)
+  group_name   String?   @db.VarChar(100)
+  unit_price   Decimal   @default(0) @db.Decimal(12, 3)
+  sort_order   Int       @default(0)
+  has_reported Boolean   @default(false)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime  @default(now()) @db.Timestamptz(6)
+  reports      reports[]
+  styles       styles    @relation(fields: [company_id, style_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([company_id, id])
+  @@unique([company_id, style_id, id])
+  @@unique([style_id, name])
+  @@index([company_id, style_id], map: "idx_style_processes_style")
+}
+
+model style_workshops {
+  id          String    @id @db.Uuid
+  company_id  String    @db.Uuid
+  style_id    String    @db.Uuid
+  workshop_id String    @db.Uuid
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  styles      styles    @relation(fields: [company_id, style_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  workshops   workshops @relation(fields: [company_id, workshop_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([style_id, workshop_id])
+  @@index([company_id, style_id], map: "idx_style_workshops_style")
+  @@index([company_id, workshop_id], map: "idx_style_workshops_workshop")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model styles {
+  id                  String            @id @db.Uuid
+  company_id          String            @db.Uuid
+  style_no            String            @db.VarChar(20)
+  name                String            @db.VarChar(100)
+  remark              String?           @db.VarChar(200)
+  production_scope    String            @default("all") @db.VarChar(20)
+  status              String            @default("production") @db.VarChar(20)
+  created_by_admin_id String            @db.Uuid
+  created_at          DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime          @default(now()) @db.Timestamptz(6)
+  completed_at        DateTime?         @db.Timestamptz(6)
+  settled_at          DateTime?         @db.Timestamptz(6)
+  archived_at         DateTime?         @db.Timestamptz(6)
+  bundles             bundles[]
+  reports             reports[]
+  settlements         settlements[]
+  style_processes     style_processes[]
+  style_workshops     style_workshops[]
+  admins              admins            @relation(fields: [company_id, created_by_admin_id], references: [company_id, id], onDelete: NoAction, onUpdate: NoAction)
+  companies           companies         @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([company_id, id])
+  @@unique([company_id, name])
+  @@unique([company_id, style_no])
+  @@index([company_id, status, created_at(sort: Desc)], map: "idx_styles_company_status_created")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model workshops {
+  id                 String               @id @db.Uuid
+  company_id         String               @db.Uuid
+  name               String               @db.VarChar(50)
+  status             String               @default("active") @db.VarChar(20)
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  employee_workshops employee_workshops[]
+  style_workshops    style_workshops[]
+  companies          companies            @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([company_id, id])
+  @@unique([company_id, name])
+}
