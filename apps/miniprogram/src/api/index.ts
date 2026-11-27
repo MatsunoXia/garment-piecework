@@ -132,6 +132,40 @@ export const api = {
   },
   myWageDetail: (styleId: string) => request<WageDetail>(`/payroll/my/styles/${styleId}`),
 
+  // ---------- 管理员端扩展 ---------- 
+  createStyle: (body: { name: string; remark?: string; productionScope?: 'all' | 'workshops'; workshopIds?: string[]; processes?: Array<{ name: string; groupName?: string; unitPrice?: string }> }) =>
+    request<{ id: string; styleNo: string; name: string; message: string }>('/styles', { method: 'POST', data: body, loading: true }),
+  styleDetail: (id: string) => request<{
+    id: string; styleNo: string; name: string; status: string; productionScope: string; remark: string | null;
+    processes: Array<{ id: string; name: string; groupName: string | null; unitPrice: string; hasReported: boolean }>;
+    workshops: Array<{ id: string; name: string }>;
+    stats: { bundleCount: number; bundleQuantity: number; employeeCount: number; reports: Record<string, number> };
+  }>(`/styles/${id}`),
+  updateStyle: (id: string, body: { name?: string; remark?: string; productionScope?: 'all' | 'workshops'; workshopIds?: string[] }) =>
+    request<{ message: string }>(`/styles/${id}`, { method: 'PATCH', data: body }),
+  completeStyle: (id: string) => request<{ message: string }>(`/styles/${id}/complete`, { method: 'POST' }),
+  archiveStyle: (id: string) => request<{ message: string }>(`/styles/${id}/archive`, { method: 'POST' }),
+  createStyleProcess: (styleId: string, body: { name: string; groupName?: string; unitPrice?: string }) =>
+    request<{ id: string }>(`/styles/${styleId}/processes`, { method: 'POST', data: body }),
+  changeProcessPrice: (id: string, body: { unitPrice: string; reason?: string }) =>
+    request<{ message: string }>(`/processes/${id}/change-price`, { method: 'POST', data: body, loading: true }),
+  createBundle: (styleId: string, body: { size?: string; quantity: number; remark?: string }) =>
+    request<{ id: string; bundleNo: number }>(`/styles/${styleId}/bundles`, { method: 'POST', data: body }),
+  batchCreateBundles: (styleId: string, items: Array<{ size?: string; quantity: number; remark?: string }>) =>
+    request<{ count: number; bundleNos: number[] }>(`/styles/${styleId}/bundles/batch`, { method: 'POST', data: { items }, loading: true }),
+  adminBundleList: (styleId: string, query: { page: number; pageSize: number; keyword?: string; reported?: number }) => {
+    const params = Object.entries(query).filter(([,v]) => v !== undefined && v !== '').map(([k,v]) => `${k}=${encodeURIComponent(String(v))}`).join('&');
+    return request<PageResult<{ id: string; bundleNo: number; size: string | null; quantity: number; remark: string | null; hasReported: boolean; reportCount: number }>>(`/styles/${styleId}/bundles?${params}`);
+  },
+  adminEmployeesList: (query: { page: number; pageSize: number; keyword?: string; status?: string }) => {
+    const params = Object.entries(query).filter(([,v]) => v !== undefined && v !== '').map(([k,v]) => `${k}=${encodeURIComponent(String(v))}`).join('&');
+    return request<PageResult<{ id: string; employeeNo: string; name: string; status: string; bound?: boolean }>>(`/employees?${params}`);
+  },
+  createEmployee: (body: { name: string; remark?: string }) =>
+    request<{ id: string; employeeNo: string; name: string }>('/employees', { method: 'POST', data: body }),
+  setEmployeeStatus: (id: string, active: boolean) =>
+    request<{ message: string }>(`/employees/${id}/${active ? 'enable' : 'disable'}`, { method: 'POST' }),
+
   // ---------- 管理员端 ----------
   adminDashboard: () =>
     request<{
@@ -176,7 +210,7 @@ export const api = {
     request<PageResult<{ id: string; employeeNo: string; name: string; status: string }>>(
       '/employees?page=1&pageSize=200&status=active',
     ),
-  adminStyles: (status?: 'production' | 'completed' | 'settled') =>
+  adminStyles: (status?: 'production' | 'completed' | 'settled' | 'archived') =>
     request<PageResult<{ id: string; styleNo: string; name: string; status: string }>>(
       `/styles?page=1&pageSize=100${status ? `&status=${status}` : ''}`,
     ),

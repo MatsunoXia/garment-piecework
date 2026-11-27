@@ -9,55 +9,105 @@
     },
     {
       "path": "pages/join/index",
-      "style": { "navigationBarTitleText": "加入公司" }
+      "style": {
+        "navigationBarTitleText": "加入公司"
+      }
     },
     {
       "path": "pages/employee/home",
-      "style": { "navigationBarTitleText": "计件工资" }
+      "style": {
+        "navigationBarTitleText": "计件工资"
+      }
     },
     {
       "path": "pages/employee/report",
-      "style": { "navigationBarTitleText": "报工" }
+      "style": {
+        "navigationBarTitleText": "报工"
+      }
     },
     {
       "path": "pages/employee/reports",
-      "style": { "navigationBarTitleText": "我的报工" }
+      "style": {
+        "navigationBarTitleText": "我的报工"
+      }
     },
     {
       "path": "pages/employee/disputes",
-      "style": { "navigationBarTitleText": "我的争议" }
+      "style": {
+        "navigationBarTitleText": "我的争议"
+      }
     },
     {
       "path": "pages/employee/wages",
-      "style": { "navigationBarTitleText": "我的工资" }
+      "style": {
+        "navigationBarTitleText": "我的工资"
+      }
     },
     {
       "path": "pages/employee/profile",
-      "style": { "navigationBarTitleText": "我的" }
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
     },
     {
       "path": "pages/admin/home",
-      "style": { "navigationBarTitleText": "管理工作台" }
+      "style": {
+        "navigationBarTitleText": "管理工作台"
+      }
     },
     {
       "path": "pages/admin/review",
-      "style": { "navigationBarTitleText": "报工审核" }
+      "style": {
+        "navigationBarTitleText": "报工审核"
+      }
     },
     {
       "path": "pages/admin/disputes",
-      "style": { "navigationBarTitleText": "争议处理" }
+      "style": {
+        "navigationBarTitleText": "争议处理"
+      }
     },
     {
       "path": "pages/admin/proxy",
-      "style": { "navigationBarTitleText": "管理员代报" }
+      "style": {
+        "navigationBarTitleText": "管理员代报"
+      }
     },
     {
       "path": "pages/admin/payroll",
-      "style": { "navigationBarTitleText": "工资统计" }
+      "style": {
+        "navigationBarTitleText": "工资统计"
+      }
     },
     {
       "path": "pages/admin/settlement",
-      "style": { "navigationBarTitleText": "工资结算" }
+      "style": {
+        "navigationBarTitleText": "工资结算"
+      }
+    },
+    {
+      "path": "pages/admin/styles",
+      "style": {
+        "navigationBarTitleText": "款式管理"
+      }
+    },
+    {
+      "path": "pages/admin/style-detail",
+      "style": {
+        "navigationBarTitleText": "款式详情"
+      }
+    },
+    {
+      "path": "pages/admin/bundles",
+      "style": {
+        "navigationBarTitleText": "捆号管理"
+      }
+    },
+    {
+      "path": "pages/admin/employees",
+      "style": {
+        "navigationBarTitleText": "员工管理"
+      }
     }
   ],
   "globalStyle": {
