@@ -210,7 +210,7 @@ export const api = {
     request<PageResult<{ id: string; employeeNo: string; name: string; status: string }>>(
       '/employees?page=1&pageSize=200&status=active',
     ),
-  adminStyles: (status?: 'production' | 'completed' | 'settled') =>
+  adminStyles: (status?: 'production' | 'completed' | 'settled' | 'archived') =>
     request<PageResult<{ id: string; styleNo: string; name: string; status: string }>>(
       `/styles?page=1&pageSize=100${status ? `&status=${status}` : ''}`,
     ),
