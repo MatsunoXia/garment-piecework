@@ -72,6 +72,12 @@ async function setWebPassword(): Promise<void> {
       <view class="action" @click="go('/pages/admin/settlement')"><text class="action-symbol">✓</text><text>工资结算</text></view>
     </view>
 
+    <view class="section-title spaced">基础管理</view>
+    <view class="actions management-actions">
+      <view class="action" @click="go('/pages/admin/styles')"><text class="action-symbol">款</text><text>款式管理</text></view>
+      <view class="action" @click="go('/pages/admin/employees')"><text class="action-symbol">人</text><text>员工管理</text></view>
+    </view>
+
     <view class="section-title spaced">生产概况</view>
     <view class="production">
       <view class="production-row">
@@ -126,6 +132,7 @@ async function setWebPassword(): Promise<void> {
 .actions { display:grid; grid-template-columns:repeat(3,1fr); gap:12rpx; }
 .action { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12rpx; background:#fff; border:1rpx solid #e7ede9; border-radius:12rpx; min-height:132rpx; color:#35413b; font-size:23rpx; }
 .action-symbol { display:flex; align-items:center; justify-content:center; width:54rpx; height:54rpx; border-radius:12rpx; background:#eaf4f1; color:#167d75; font-size:34rpx; font-weight:600; }
+.management-actions { grid-template-columns:repeat(2,1fr); }
 .production,.other { background:#fff; border:1rpx solid #e7ede9; border-radius:12rpx; padding:0 22rpx; }
 .production-row,.other-row { display:flex; justify-content:space-between; align-items:center; padding:21rpx 0; border-bottom:1rpx solid #edf1ee; }
 .production-row:last-child,.other-row:last-child { border-bottom:0; }
